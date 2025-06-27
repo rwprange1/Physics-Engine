@@ -5,9 +5,9 @@
  * The 
  */
 Display::Display(){
-    this->videoMode = sf::VideoMode({300, 300});
+    this->videoMode = sf::VideoMode({1000, 800});
     this->window = sf::RenderWindow(this->videoMode, "Game", sf::Style::Titlebar | sf::Style::Close);
-    this->window.setFramerateLimit(100);
+    this->window.setFramerateLimit(0);
 
     this->buildObjects();
 }
@@ -89,20 +89,29 @@ void Display::pollEvents(){
 void Display::buildObjects(){
     std::vector<sf::Color> colors = {sf::Color::Blue,sf::Color::Green, sf::Color::Red, sf::Color::Magenta, sf::Color::Cyan, sf::Color::Yellow};
 
-
-    //int numObjects = 3 + (rand() % 10);
-    int numObjects = 5;
+    int numObjects = 300 + (rand() % 10);
+    //int numObjects = 50;
     for (int i = 0; i < numObjects; i++) {
         int color =  (1 + rand()) % 6; 
         sf::CircleShape circle; 
         
-        circle.setRadius(25.f);
+        circle.setRadius(5.f);
         //create a function which returns a random position not contained in the list, and not causing collisons
 
-        circle.setPosition(sf::Vector2f(
+        sf::Vector2f pos = sf::Vector2f(
             rand() % static_cast<int>(this->window.getSize().x - circle.getRadius()),
             rand() % static_cast<int>(this->window.getSize().y - circle.getRadius())
-        ));
+        );
+        circle.setPosition(pos);
+        
+        while (!this->validatePos(circle)){
+            sf::Vector2f pos = sf::Vector2f(
+            rand() % static_cast<int>(this->window.getSize().x - circle.getRadius()),
+            rand() % static_cast<int>(this->window.getSize().y - circle.getRadius())
+            );
+            circle.setPosition(pos);
+        }
+        
         circle.setFillColor(colors[color]);
 
         this->objects.push_back(std::make_tuple(circle, this->makeVec(circle) ));
@@ -143,10 +152,13 @@ void Display::updateObjects(){
         }
 
         for (auto &e2: this->objects){
-            if (&std::get<0>(e1) != &std::get<0>(e2) && this->isCollision(std::get<0>(e1),std::get<0>(e2))) {
-                sf::Color temp = std::get<0>(e2).getFillColor();
-                std::get<0>(e2).setFillColor(std::get<0>(e1).getFillColor());
-                std::get<0>(e1).setFillColor(temp);
+            if (&std::get<0>(e1) != &std::get<0>(e2) && this->isCollisionWithBall(std::get<0>(e1),std::get<0>(e2))) {
+                sf::Vector2f v1 = std::get<1>(e1); 
+                sf::Vector2f v2 = std::get<1>(e2); 
+
+                sf::Vector2f temp = v2;
+                std::get<1>(e2) = v1;
+                std::get<1>(e1) = temp; 
             }
         }
     }
@@ -157,18 +169,42 @@ void Display::updateObjects(){
 
 
 
-bool Display::isCollision(sf::CircleShape c1, sf::CircleShape c2){
+bool Display::isCollisionWithBall(sf::CircleShape c1, sf::CircleShape c2){
     sf::Vector2f c1Point = c1.getPosition();
     sf::Vector2f c2Point = c2.getPosition();
     
     float a = std::abs( c1Point.x - c2Point.x);
     float b = std::abs( c1Point.y - c2Point.y);
-    float diff = std::pow(a,2) + std::pow(b,2);
+    float diff = a*a + b*b;
 
-    return std::sqrt(diff) <= c1.getRadius() + c2.getRadius();
+    return diff <= (c1.getRadius() + c2.getRadius()) * (c1.getRadius() + c2.getRadius());
 
-
-    
-    
 }
 
+/**
+ * On spawn of balls make sure none are in invalid positions
+ * @returns bol, false if not valid, true otherwise
+ */
+bool Display::validatePos(sf::CircleShape c1) {
+    for (auto &e2: this->objects){
+        if (&c1 != &std::get<0>(e2) && this->isCollisionWithBall(c1,std::get<0>(e2))) {
+            return false;
+        }
+        if (this->isCollisionWithWall(c1)){
+            return false;
+        }
+    }
+
+    return true;
+
+}
+
+
+bool Display::isCollisionWithWall(sf::CircleShape c1){
+    int posX = c1.getPosition().x;
+    int posY = c1.getPosition().y;
+    return  
+        (posX < 0 || posX > (this->window.getSize().x -  2 * c1.getRadius())) 
+        || 
+        (posY < 0 || posY > (this->window.getSize().y - 2 * c1.getRadius()));
+}

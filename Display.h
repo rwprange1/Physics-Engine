@@ -32,8 +32,11 @@ class Display {
 
         void updateObjects();
 
-        bool isCollision(sf::CircleShape, sf::CircleShape);
 
+        bool isCollisionWithWall(sf::CircleShape);
+        bool isCollisionWithBall(sf::CircleShape, sf::CircleShape);
+        void changeVelo(std::tuple<sf::CircleShape, sf::Vector2f>, std::tuple<sf::CircleShape, sf::Vector2f>);
+        bool validatePos(sf::CircleShape);
         sf::Vector2f makeVec(sf::CircleShape);
 
     public:
