@@ -1,17 +1,15 @@
 #include "Display.h"
 
 
-
+/**
+ * The 
+ */
 Display::Display(){
     this->videoMode = sf::VideoMode({1000, 800});
     this->window = sf::RenderWindow(this->videoMode, "Game", sf::Style::Titlebar | sf::Style::Close);
     this->window.setFramerateLimit(60);
-
     this->buildCube();
     this->buildObjects();
-
-
-    
 }
 
 /**
@@ -34,7 +32,6 @@ void Display::render(){
     
     for (auto &e: this->objects){
         this->window.draw(std::get<0>(e));
-        //std::cout << e.getPosition().x << " " << e.getPosition().y <<"\n";
     }
 
 
@@ -88,12 +85,12 @@ void Display::pollEvents(){
  * @returns void
  */
 void Display::buildObjects(){
-    std::vector<sf::Color> colors = {sf::Color::Blue,sf::Color::Green, sf::Color::Red, sf::Color::Magenta};
+    std::vector<sf::Color> colors = {sf::Color::Blue,sf::Color::Green, sf::Color::Red, sf::Color::Magenta, sf::Color::Cyan, sf::Color::Yellow};
 
 
-    int numObjects = 100 + (rand() % 10);
+    int numObjects = 1000 + (rand() % 10);
     for (int i = 0; i < numObjects; i++) {
-        int color =  (1 + rand()) % 4; 
+        int color =  (1 + rand()) % 6; 
         sf::CircleShape circle; 
         
         circle.setRadius(25.f);
@@ -105,8 +102,6 @@ void Display::buildObjects(){
         ));
         circle.setFillColor(colors[color]);
 
-
-
         this->objects.push_back(std::make_tuple(circle, this->makeVec(circle) ));
     }
     std::cout << "Generated " + std::to_string(numObjects) << " balls :)\n";
@@ -117,7 +112,6 @@ void Display::buildObjects(){
  * @returns void
  */
 void Display::buildCube(){
-
     sf::Vector2u dimensions = this->window.getSize();
     this->cube.setPosition(sf::Vector2f(100.f,100.f)); //we are placing the object's top left corner here
     this->cube.setSize(sf::Vector2f(100.f,100.f)); //float value helps compiler
@@ -136,12 +130,28 @@ sf::Vector2f Display::makeVec(sf::CircleShape circle){
         );
 }
 
+
+/**
+ * This function will handle the collision detection, and move the objects accordingly
+ * 
+ */
 void Display::updateObjects(){
 
     for (auto &e: this->objects){
         std::get<0>(e).move(std::get<1>(e));
-        //std::cout << e.getPosition().x << " " << e.getPosition().y <<"\n";
+        int posX = std::get<0>(e).getPosition().x;
+        int posY = std::get<0>(e).getPosition().y;
+        if ( posX < 0 || posX > (this->window.getSize().x -  2 * std::get<0>(e).getRadius())){
+            std::get<1>(e).x = std::get<1>(e).x * -1.f;
+        }
+
+        if ( posY < 0 || posY > (this->window.getSize().y - 2 * std::get<0>(e).getRadius())){
+            std::get<1>(e).y = std::get<1>(e).y * -1.f;
+        }
     }
+
+
+
 }
 
 void Display::updateCube(){
