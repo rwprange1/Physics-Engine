@@ -5,10 +5,10 @@
  * The 
  */
 Display::Display(){
-    this->videoMode = sf::VideoMode({1000, 800});
+    this->videoMode = sf::VideoMode({300, 300});
     this->window = sf::RenderWindow(this->videoMode, "Game", sf::Style::Titlebar | sf::Style::Close);
-    this->window.setFramerateLimit(60);
-    this->buildCube();
+    this->window.setFramerateLimit(100);
+
     this->buildObjects();
 }
 
@@ -28,7 +28,7 @@ bool Display::isWinOpen(){
 void Display::render(){
     this->window.clear();
 
-    this->window.draw(this->cube);
+  
     
     for (auto &e: this->objects){
         this->window.draw(std::get<0>(e));
@@ -41,7 +41,7 @@ void Display::render(){
 void Display::update(){
     this->pollEvents();
 
-    this->updateCube();
+
     this->updateObjects();
 }
 
@@ -65,6 +65,8 @@ void Display::pollEvents(){
                 case sf::Keyboard::Scancode::Space:
                     std::cout << "Space Was Hit" << std::endl;  
                     break;  
+
+
             }
 
             
@@ -88,7 +90,8 @@ void Display::buildObjects(){
     std::vector<sf::Color> colors = {sf::Color::Blue,sf::Color::Green, sf::Color::Red, sf::Color::Magenta, sf::Color::Cyan, sf::Color::Yellow};
 
 
-    int numObjects = 1000 + (rand() % 10);
+    //int numObjects = 3 + (rand() % 10);
+    int numObjects = 5;
     for (int i = 0; i < numObjects; i++) {
         int color =  (1 + rand()) % 6; 
         sf::CircleShape circle; 
@@ -107,17 +110,7 @@ void Display::buildObjects(){
     std::cout << "Generated " + std::to_string(numObjects) << " balls :)\n";
 }
 
-/**
- * Create the cube which we will be launching at the other balls!
- * @returns void
- */
-void Display::buildCube(){
-    sf::Vector2u dimensions = this->window.getSize();
-    this->cube.setPosition(sf::Vector2f(100.f,100.f)); //we are placing the object's top left corner here
-    this->cube.setSize(sf::Vector2f(100.f,100.f)); //float value helps compiler
-    this->cube.setScale(sf::Vector2f(.5f, .5f)); //cut the objects size down by 1/2
-    this->cube.setFillColor(sf::Color::Cyan);
-}
+
 
 /**
  * Generate a random vector of floats
@@ -137,16 +130,24 @@ sf::Vector2f Display::makeVec(sf::CircleShape circle){
  */
 void Display::updateObjects(){
 
-    for (auto &e: this->objects){
-        std::get<0>(e).move(std::get<1>(e));
-        int posX = std::get<0>(e).getPosition().x;
-        int posY = std::get<0>(e).getPosition().y;
-        if ( posX < 0 || posX > (this->window.getSize().x -  2 * std::get<0>(e).getRadius())){
-            std::get<1>(e).x = std::get<1>(e).x * -1.f;
+    for (auto &e1: this->objects){
+        std::get<0>(e1).move(std::get<1>(e1));
+        int posX = std::get<0>(e1).getPosition().x;
+        int posY = std::get<0>(e1).getPosition().y;
+        if ( posX < 0 || posX > (this->window.getSize().x -  2 * std::get<0>(e1).getRadius())){
+            std::get<1>(e1).x = std::get<1>(e1).x * -1.f;
         }
 
-        if ( posY < 0 || posY > (this->window.getSize().y - 2 * std::get<0>(e).getRadius())){
-            std::get<1>(e).y = std::get<1>(e).y * -1.f;
+        if ( posY < 0 || posY > (this->window.getSize().y - 2 * std::get<0>(e1).getRadius())){
+            std::get<1>(e1).y = std::get<1>(e1).y * -1.f;
+        }
+
+        for (auto &e2: this->objects){
+            if (&std::get<0>(e1) != &std::get<0>(e2) && this->isCollision(std::get<0>(e1),std::get<0>(e2))) {
+                sf::Color temp = std::get<0>(e2).getFillColor();
+                std::get<0>(e2).setFillColor(std::get<0>(e1).getFillColor());
+                std::get<0>(e1).setFillColor(temp);
+            }
         }
     }
 
@@ -154,6 +155,20 @@ void Display::updateObjects(){
 
 }
 
-void Display::updateCube(){
 
+
+bool Display::isCollision(sf::CircleShape c1, sf::CircleShape c2){
+    sf::Vector2f c1Point = c1.getPosition();
+    sf::Vector2f c2Point = c2.getPosition();
+    
+    float a = std::abs( c1Point.x - c2Point.x);
+    float b = std::abs( c1Point.y - c2Point.y);
+    float diff = std::pow(a,2) + std::pow(b,2);
+
+    return std::sqrt(diff) <= c1.getRadius() + c2.getRadius();
+
+
+    
+    
 }
+

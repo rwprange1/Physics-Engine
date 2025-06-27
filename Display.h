@@ -5,6 +5,7 @@
 #include <ctime>
 #include <cstdlib>
 #include <tuple>
+#include <cmath>
 
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
@@ -22,15 +23,16 @@ class Display {
         sf::Vector2f mousePosView; 
 
         std::vector< std::tuple<sf::CircleShape, sf::Vector2f>> objects;
-        sf::RectangleShape cube;
+        sf::CircleShape circ;
         
      
 
         //Functions
         void buildObjects();
-        void buildCube();
+
         void updateObjects();
-        void updateCube();
+
+        bool isCollision(sf::CircleShape, sf::CircleShape);
 
         sf::Vector2f makeVec(sf::CircleShape);
 
